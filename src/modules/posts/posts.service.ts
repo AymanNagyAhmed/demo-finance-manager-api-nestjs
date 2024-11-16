@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { QueryPostDto, SortOrder } from './dto/query-post.dto';
 import { CustomLogger } from '../../shared/services/logger.service';
+import { PaginatedResponse } from '../../shared/interfaces/pagination.interface';
+import { Post } from './entities/post.entity';
 
 @Injectable()
 export class PostsService {
@@ -9,10 +12,17 @@ export class PostsService {
     this.logger.setContext(PostsService.name);
   }
 
-  create(createPostDto: CreatePostDto) {
+  async create(createPostDto: CreatePostDto): Promise<Post> {
     try {
       this.logger.log(`Creating post: ${JSON.stringify(createPostDto)}`);
-      return 'This action adds a new post';
+      // Mock implementation
+      const post = {
+        id: 1,
+        ...createPostDto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      return post;
     } catch (error) {
       this.logger.error(
         `Failed to create post: ${error.message}`,
@@ -22,10 +32,68 @@ export class PostsService {
     }
   }
 
-  findAll() {
+  async findAll(query: QueryPostDto): Promise<PaginatedResponse<Post>> {
     try {
-      this.logger.log('Fetching all posts');
-      return `This action returns all posts`;
+      this.logger.log(`Fetching posts with query: ${JSON.stringify(query)}`);
+      
+      const {
+        searchTerm,
+        searchId,
+        searchDate,
+        sortBy = 'createdAt',
+        sortOrder = SortOrder.DESC,
+        page = 1,
+        limit = 10,
+      } = query;
+
+      // Mock data for demonstration
+      const mockTotal = 100;
+      const lastPage = Math.ceil(mockTotal / limit);
+      
+      // Generate mock items
+      let items = Array.from({ length: limit }, (_, i) => ({
+        id: (page - 1) * limit + i + 1,
+        title: `Post-${(page - 1) * limit + i + 1}`,
+        content: `Content ${(page - 1) * limit + i + 1}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+      // Apply search filters (mock implementation)
+      if (searchTerm) {
+        items = items.filter(item => 
+          item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      if (searchId) {
+        items = items.filter(item => item.id === searchId);
+      }
+
+      if (searchDate) {
+        const searchDateTime = new Date(searchDate).getTime();
+        items = items.filter(item => 
+          item.updatedAt.getTime() === searchDateTime
+        );
+      }
+
+      // Apply sorting
+      items.sort((a, b) => {
+        const compareValue = sortOrder === SortOrder.ASC ? 1 : -1;
+        if (a[sortBy] < b[sortBy]) return -1 * compareValue;
+        if (a[sortBy] > b[sortBy]) return 1 * compareValue;
+        return 0;
+      });
+
+      return {
+        items,
+        meta: {
+          total: items.length,
+          page,
+          lastPage,
+          limit,
+        },
+      };
     } catch (error) {
       this.logger.error(
         `Failed to fetch posts: ${error.message}`,
@@ -35,10 +103,23 @@ export class PostsService {
     }
   }
 
-  findOne(id: number) {
+  async findOne(id: number): Promise<Post> {
     try {
       this.logger.log(`Fetching post with id: ${id}`);
-      return `This action returns a #${id} post`;
+      // Mock implementation
+      const post = {
+        id,
+        title: `Post ${id}`,
+        content: `Content ${id}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      if (!post) {
+        throw new NotFoundException(`Post with ID ${id} not found`);
+      }
+      
+      return post;
     } catch (error) {
       this.logger.error(
         `Failed to fetch post ${id}: ${error.message}`,
@@ -48,10 +129,15 @@ export class PostsService {
     }
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
+  async update(id: number, updatePostDto: UpdatePostDto): Promise<Post> {
     try {
       this.logger.log(`Updating post ${id}: ${JSON.stringify(updatePostDto)}`);
-      return `This action updates a #${id} post`;
+      const post = await this.findOne(id);
+      return {
+        ...post,
+        ...updatePostDto,
+        updatedAt: new Date(),
+      };
     } catch (error) {
       this.logger.error(
         `Failed to update post ${id}: ${error.message}`,
@@ -61,10 +147,11 @@ export class PostsService {
     }
   }
 
-  remove(id: number) {
+  async remove(id: number): Promise<void> {
     try {
       this.logger.log(`Removing post ${id}`);
-      return `This action removes a #${id} post`;
+      const post = await this.findOne(id);
+      // Mock deletion
     } catch (error) {
       this.logger.error(
         `Failed to remove post ${id}: ${error.message}`,
