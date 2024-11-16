@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ErrorResponse } from '../../common/interfaces/response.interface';
 
 interface ExceptionResponse {
   message?: string;
@@ -42,7 +41,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       errorMessage = 'Something went wrong';
     }
 
-    const errorResponse: ErrorResponse = {
+    const errorResponse = {
       status: false,
       statusCode: status,
       timestamp: new Date().toISOString(),
