@@ -1,38 +1,76 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { CustomLogger } from '../../shared/services/logger.service';
 
 @Injectable()
 export class PostsService {
-  private readonly logger = new Logger(PostsService.name);
-
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(private readonly logger: CustomLogger) {
+    this.logger.setContext(PostsService.name);
   }
 
-  async findAll() {
-    this.logger.log('Fetching all posts');
+  create(createPostDto: CreatePostDto) {
     try {
-      // Your database query or other logic here
-      const posts = `This action returns all posts`;
-      
-      this.logger.log(`Successfully fetched ${posts.length} posts`);
-      return posts;
+      this.logger.log(`Creating post: ${JSON.stringify(createPostDto)}`);
+      return 'This action adds a new post';
     } catch (error) {
-      this.logger.error('Failed to fetch posts', error.stack);
+      this.logger.error(
+        `Failed to create post: ${error.message}`,
+        error.stack
+      );
+      throw error;
+    }
+  }
+
+  findAll() {
+    try {
+      this.logger.log('Fetching all posts');
+      return `This action returns all posts`;
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch posts: ${error.message}`,
+        error.stack
+      );
       throw error;
     }
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} post`;
+    try {
+      this.logger.log(`Fetching post with id: ${id}`);
+      return `This action returns a #${id} post`;
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch post ${id}: ${error.message}`,
+        error.stack
+      );
+      throw error;
+    }
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+    try {
+      this.logger.log(`Updating post ${id}: ${JSON.stringify(updatePostDto)}`);
+      return `This action updates a #${id} post`;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update post ${id}: ${error.message}`,
+        error.stack
+      );
+      throw error;
+    }
   }
 
   remove(id: number) {
-    return `This action removes a #${id} post`;
+    try {
+      this.logger.log(`Removing post ${id}`);
+      return `This action removes a #${id} post`;
+    } catch (error) {
+      this.logger.error(
+        `Failed to remove post ${id}: ${error.message}`,
+        error.stack
+      );
+      throw error;
+    }
   }
 }

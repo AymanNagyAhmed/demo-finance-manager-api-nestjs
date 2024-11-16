@@ -5,10 +5,12 @@ import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
+import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const reflector = new Reflector();
   
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,

@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
-import { ConfigModule } from '@nestjs/config';
+import { CustomLogger } from '../../shared/services/logger.service';
 
 @Module({
-  imports: [ConfigModule],
   controllers: [PostsController],
-  providers: [PostsService],
+  providers: [PostsService, CustomLogger],
 })
 export class PostsModule {}
