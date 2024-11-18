@@ -1,7 +1,7 @@
 import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsPhone } from '../../../common/decorators/is-phone.decorator';
+import { IsPhone } from '@/common/decorators/is-phone.decorator';
 
 export class CreateUserDto {
   @ApiProperty({
