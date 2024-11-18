@@ -3,7 +3,7 @@ import {
   ErrorResponse, 
   ValidationErrorResponse,
   ValidationError 
-} from '../interfaces/response.interface';
+} from '@/common/interfaces/response.interface';
 
 export class ResponseUtil {  // Renamed to singular
   static success<T>(data: T, message = 'Success', statusCode = 200): SuccessResponse<T> {

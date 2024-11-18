@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { ApplicationException } from './common/exceptions/application.exception';
-import { HttpStatus } from '@nestjs/common';
-import { ResponseUtil } from './common/utils/response.util';
-import { SuccessResponse } from './common/interfaces/response.interface';
+import { Injectable, HttpStatus } from '@nestjs/common';
+import { ApplicationException } from '@/common/exceptions/application.exception';
+import { ResponseUtil } from '@/common/utils/response.util';
+import { SuccessResponse } from '@/common/interfaces/response.interface';
 
 @Injectable()
 export class AppService {

@@ -10,12 +10,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { QueryPostDto } from './dto/query-post.dto';
-import { Post as PostEntity } from './entities/post.entity';
-import { PaginatedResponse } from '../../shared/interfaces/pagination.interface';
+import { PostsService } from '@/modules/posts/posts.service';
+import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
+import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
+import { QueryPostDto } from '@/modules/posts/dto/query-post.dto';
+import { Post as PostEntity } from '@/modules/posts/entities/post.entity';
+import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
 
 @ApiTags('Posts')
 @Controller('posts')

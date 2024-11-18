@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ErrorResponse } from '../interfaces/response.interface';
+import { ErrorResponse } from '@/common/interfaces/response.interface';
 
 interface ExceptionResponse {
   message?: string;

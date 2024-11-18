@@ -3,7 +3,7 @@ import {
   ErrorResponse, 
   ValidationErrorResponse,
   ValidationError 
-} from '../types/response.types';
+} from '@/common/types/response.types';
 
 export class ResponseUtils {
   static success<T>(data: T, message = 'Success', statusCode = 200): SuccessResponse<T> {

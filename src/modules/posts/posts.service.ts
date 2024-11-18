@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { QueryPostDto, SortOrder } from './dto/query-post.dto';
-import { CustomLogger } from '../../shared/services/logger.service';
-import { PaginatedResponse } from '../../shared/interfaces/pagination.interface';
-import { Post } from './entities/post.entity';
+import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
+import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
+import { QueryPostDto, SortOrder } from '@/modules/posts/dto/query-post.dto';
+import { CustomLogger } from '@/shared/services/logger.service';
+import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
+import { Post } from '@/modules/posts/entities/post.entity';
 
 @Injectable()
 export class PostsService {
