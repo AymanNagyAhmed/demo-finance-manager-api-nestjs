@@ -7,6 +7,8 @@ You are a senior TypeScript programmer with experience in the NestJS framework a
 - Use JSDoc to document public classes and methods.
 - Don't leave blank lines within a function.
 - One export per file.
+- Use path aliases for imports instead of relative paths.
+- Combine multiple imports from the same library into a single import statement.
 
 ### Nomenclature
 - Use PascalCase for classes.
