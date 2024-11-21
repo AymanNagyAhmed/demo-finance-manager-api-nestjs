@@ -16,6 +16,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
 import { UsersService } from '@/modules/users/users.service';
 import { AdminManagerGuard } from '@/modules/users/guards/admin-manager.guard';
+import { Roles } from '@/modules/users/decorators/roles.decorator';
+import { Role } from '@/modules/users/enums/role.enum';
 
 @ApiTags('users')
 @Controller('users')
@@ -67,7 +69,6 @@ export class UsersController {
     } catch (error) {
       this.logger.error(`Failed to find user by phone: ${error.message}`, error.stack);
       
-      // Rethrow NotFoundException but catch other errors
       if (error.status === HttpStatus.NOT_FOUND) {
         throw error;
       }
@@ -76,6 +77,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.MANAGER)
   @UseGuards(AdminManagerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
@@ -105,7 +107,6 @@ export class UsersController {
     } catch (error) {
       this.logger.error(`Failed to delete user ${id}: ${error.message}`, error.stack);
       
-      // Rethrow NotFoundException but catch other errors
       if (error.status === HttpStatus.NOT_FOUND) {
         throw error;
       }

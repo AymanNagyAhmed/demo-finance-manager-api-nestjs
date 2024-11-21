@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { User } from '@/modules/users/entities/user.entity';
 import { Role } from '@/modules/users/enums/role.enum';
+import { REQUIRED_ROLES_METADATA_KEY } from '@/modules/users/decorators/roles.decorator';
 
 interface RequestWithUser extends Request {
   user?: User;
@@ -12,6 +13,16 @@ export class AdminManagerGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(REQUIRED_ROLES_METADATA_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // If no roles are required, allow access
+    if (!requiredRoles) {
+      return true;
+    }
+
     const request = this.getRequest(context);
     
     if (!this.isRequestWithUser(request)) {
@@ -23,11 +34,7 @@ export class AdminManagerGuard implements CanActivate {
       throw new ForbiddenException('No valid user found in request');
     }
 
-    if (!this.hasValidRole(user)) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
-
-    return true;
+    return this.hasRequiredRole(user, requiredRoles);
   }
 
   private getRequest(context: ExecutionContext): unknown {
@@ -46,8 +53,7 @@ export class AdminManagerGuard implements CanActivate {
            'role' in user;
   }
 
-  private hasValidRole(user: User): boolean {
-    const allowedRoles = [Role.ADMIN, Role.MANAGER];
-    return user.role !== undefined && allowedRoles.includes(user.role);
+  private hasRequiredRole(user: User, requiredRoles: Role[]): boolean {
+    return requiredRoles.some(role => user.role === role);
   }
 } 
