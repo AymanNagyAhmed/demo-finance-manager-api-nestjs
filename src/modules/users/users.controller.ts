@@ -101,7 +101,7 @@ export class UsersController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Internal server error.',
   })
-  async deleteUser(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number) {
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
     try {
       return await this.usersService.remove(id);
     } catch (error) {
