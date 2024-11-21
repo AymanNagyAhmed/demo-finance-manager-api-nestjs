@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
 import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 
@@ -21,36 +21,42 @@ export class UsersService {
   }
 
   findOne(id: number) {
-    return this.users.find(user => user.id === id);
+    const user = this.users.find(user => user.id === id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 
-  /**
-   * Find a user by phone number
-   * @param phoneNumber - The phone number to search for
-   * @returns The user with the matching phone number or undefined
-   */
   findByPhone(phoneNumber: string) {
-    return this.users.find(user => user.phoneNumber === phoneNumber);
+    const user = this.users.find(user => user.phoneNumber === phoneNumber);
+    if (!user) {
+      throw new NotFoundException(`User with phone number ${phoneNumber} not found`);
+    }
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
     const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex > -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        ...updateUserDto,
-      };
-      return this.users[userIndex];
+    if (userIndex === -1) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return null;
+
+    this.users[userIndex] = {
+      ...this.users[userIndex],
+      ...updateUserDto,
+    };
+    
+    return this.users[userIndex];
   }
 
   remove(id: number) {
     const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex > -1) {
-      const [removedUser] = this.users.splice(userIndex, 1);
-      return removedUser;
+    if (userIndex === -1) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return null;
+
+    const [removedUser] = this.users.splice(userIndex, 1);
+    return removedUser;
   }
 } 

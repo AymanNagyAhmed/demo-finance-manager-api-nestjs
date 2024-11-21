@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Delete, Param, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
 import { UsersService } from '@/modules/users/users.service';
@@ -42,10 +42,14 @@ export class UsersController {
     description: 'User has been successfully deleted.',
   })
   @ApiResponse({
+    status: 400,
+    description: 'Invalid ID value.',
+  })
+  @ApiResponse({
     status: 403,
     description: 'Forbidden. User must be an admin or manager.',
   })
-  async deleteUser(@Param('id') id: number) {
+  async deleteUser(@Param('id', new ParseIntPipe({ errorHttpStatusCode: 400 })) id: number) {
     return this.usersService.remove(id);
   }
 } 
