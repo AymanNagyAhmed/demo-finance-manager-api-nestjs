@@ -4,7 +4,7 @@ import { User } from '@/modules/users/entities/user.entity';
 import { Role } from '@/modules/users/enums/role.enum';
 
 @Injectable()
-export class RoleGuard implements CanActivate {
+export class AdminManagerGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -15,7 +15,7 @@ export class RoleGuard implements CanActivate {
       throw new ForbiddenException('No user found in request');
     }
 
-    if (user.role !== Role.ADMIN && user.role !== Role.MANAGER) {
+    if (!user.role || (user.role !== Role.ADMIN && user.role !== Role.MANAGER)) {
       throw new ForbiddenException('You are not allowed to perform this action');
     }
 

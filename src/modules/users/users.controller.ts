@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, Query, Delete, Param, UseGuards } from '@n
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
 import { UsersService } from '@/modules/users/users.service';
-import { RoleGuard } from '@/modules/users/guards/role.guard';
+import { AdminManagerGuard } from '@/modules/users/guards/admin-manager.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -34,7 +34,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(RoleGuard)
+  @UseGuards(AdminManagerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
   @ApiResponse({
@@ -43,7 +43,7 @@ export class UsersController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. User does not have required role.',
+    description: 'Forbidden. User must be an admin or manager.',
   })
   async deleteUser(@Param('id') id: number) {
     return this.usersService.remove(id);

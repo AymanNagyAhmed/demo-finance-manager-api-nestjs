@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleGuard } from './role.guard';
+import { AdminManagerGuard } from './admin-manager.guard';
 import { Role } from '@/modules/users/enums/role.enum';
 
-describe('RoleGuard', () => {
-  let guard: RoleGuard;
+describe('AdminManagerGuard', () => {
+  let guard: AdminManagerGuard;
   let reflector: Reflector;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        RoleGuard,
+        AdminManagerGuard,
         {
           provide: Reflector,
           useValue: {
@@ -21,7 +21,7 @@ describe('RoleGuard', () => {
       ],
     }).compile();
 
-    guard = module.get<RoleGuard>(RoleGuard);
+    guard = module.get<AdminManagerGuard>(AdminManagerGuard);
     reflector = module.get<Reflector>(Reflector);
   });
 
@@ -31,6 +31,11 @@ describe('RoleGuard', () => {
 
   it('should allow admin users', () => {
     const context = createMockContext({ role: Role.ADMIN });
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
+  it('should allow manager users', () => {
+    const context = createMockContext({ role: Role.MANAGER });
     expect(guard.canActivate(context)).toBe(true);
   });
 
@@ -53,7 +58,7 @@ function createMockContext(user: { role: Role } | null): ExecutionContext {
       }),
     }),
     getType: () => 'http',
-    getClass: () => RoleGuard,
+    getClass: () => AdminManagerGuard,
     getHandler: () => jest.fn(),
     getArgs: () => [],
     getArgByIndex: () => null,
