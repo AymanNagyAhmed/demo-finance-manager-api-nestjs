@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Body, Get, Query, Delete, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
 import { UsersService } from '@/modules/users/users.service';
+import { RoleGuard } from '@/modules/users/guards/role.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -30,5 +31,21 @@ export class UsersController {
   })
   async findByPhone(@Query() createUserDto: CreateUserDto) {
     return this.usersService.findByPhone(createUserDto.phoneNumber);
+  }
+
+  @Delete(':id')
+  @UseGuards(RoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiResponse({
+    status: 200,
+    description: 'User has been successfully deleted.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User does not have required role.',
+  })
+  async deleteUser(@Param('id') id: number) {
+    return this.usersService.remove(id);
   }
 } 
