@@ -1,5 +1,3 @@
-import { Role } from '@/modules/users/enums/role.enum';
-
 export class User {
   id: number;
   email: string;
@@ -7,7 +5,6 @@ export class User {
   firstName: string;
   lastName: string;
   isActive: boolean;
-  role: Role;
   createdAt: Date;
   updatedAt: Date;
 } 
