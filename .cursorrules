@@ -107,3 +107,76 @@ Example: isLoading, hasError, canDelete, etc.
 - Write tests for each controller and service.
 - Write end to end tests for each api module.
 - Add a admin/test method to each controller as a smoke test.
+
+## Database and TypeORM Conventions
+
+### Column Naming
+- Use `snake_case` for database column names
+- Use `camelCase` for entity properties
+- Always use the `name` parameter in `@Column` decorator to explicitly define the database column name
+- Examples:
+  - Database column: `first_name`, Entity property: `firstName`
+  - Database column: `phone_number`, Entity property: `phoneNumber`
+  - Database column: `is_active`, Entity property: `isActive`
+  - Database column: `created_at`, Entity property: `createdAt`
+
+### Index Naming
+- Use meaningful and unique index names
+- Follow pattern: `IDX_entityName_columnName`
+- For composite indexes: `IDX_entityName_column1_column2`
+- Examples:
+  - `IDX_user_first_name`
+  - `IDX_user_email`
+  - `IDX_user_phone_number`
+
+### Entity Decorators
+- Always specify column types explicitly
+- Use appropriate length constraints for string columns
+- Add proper index decorators
+- Specify relation options clearly
+- Examples:
+
+## TypeORM and Database Configuration Standards
+
+### Type Safety
+- Use explicit types for all configuration values
+- Implement proper TypeORM type definitions
+- Use TypeScript generics where applicable
+- Example:
+
+### Database Character Set and Collation Standards
+
+#### Character Set Configuration
+- Always use UTF-8 with full Unicode support
+- Configure at both connection and database level
+- Use `utf8mb4` for MySQL/MariaDB
+- Example:
+
+## Query Building and Data Access Patterns
+
+### Query Building Principles
+- Follow Single Responsibility Principle
+- Implement reusable query building logic
+- Use TypeORM best practices
+- Implement proper validation
+- Example:
+
+### Pagination Standards
+- Use standardized pagination DTOs
+- Implement proper
+
+## Code Organization and DRY Principles
+
+### DTO Inheritance and Composition
+- Use DTO inheritance for shared properties
+- Avoid duplicate pagination/filtering options
+- Extend base DTOs for specific use cases
+- Example:
+
+## SOLID Principles Implementation
+
+### Single Responsibility Principle (SRP)
+- Each class should have only one reason to change
+- Split large services into smaller focused ones
+- Use composition to combine functionality
+- Example:
