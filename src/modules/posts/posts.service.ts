@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
 import { QueryPostDto, SortOrder } from '@/modules/posts/dto/query-post.dto';
@@ -9,30 +11,43 @@ import { Post } from '@/modules/posts/entities/post.entity';
 export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
-  async create(createPostDto: CreatePostDto): Promise<Post> {
+  constructor(
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+  ) {}
+
+  /**
+   * Create a new post
+   * @param createPostDto - Post creation data
+   * @param userId - UUID of the user creating the post
+   * @returns Created post
+   */
+  async create(createPostDto: CreatePostDto, userId: string): Promise<Post> {
     try {
       this.logger.log(`Creating post: ${JSON.stringify(createPostDto)}`);
-      // Mock implementation
-      const post = {
-        id: 1,
+      
+      const post = this.postRepository.create({
         ...createPostDto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      return post;
+        userId,
+      });
+
+      return await this.postRepository.save(post);
     } catch (error) {
       this.logger.error(
         `Failed to create post: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }
   }
 
+  /**
+   * Find all posts with pagination and filtering
+   * @param query - Query parameters for filtering and pagination
+   * @returns Paginated post list
+   */
   async findAll(query: QueryPostDto): Promise<PaginatedResponse<Post>> {
     try {
-      this.logger.log(`Fetching posts with query: ${JSON.stringify(query)}`);
-      
       const {
         searchTerm,
         searchId,
@@ -43,116 +58,122 @@ export class PostsService {
         limit = 10,
       } = query;
 
-      // Mock data for demonstration
-      const mockTotal = 100;
-      const lastPage = Math.ceil(mockTotal / limit);
-      
-      // Generate mock items
-      let items = Array.from({ length: limit }, (_, i) => ({
-        id: (page - 1) * limit + i + 1,
-        title: `Post-${(page - 1) * limit + i + 1}`,
-        content: `Content ${(page - 1) * limit + i + 1}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }));
+      const queryBuilder = this.postRepository.createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .skip((page - 1) * limit)
+        .take(limit);
 
-      // Apply search filters (mock implementation)
+      // Apply search filters
       if (searchTerm) {
-        items = items.filter(item => 
-          item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        queryBuilder.andWhere(
+          '(post.title LIKE :searchTerm OR post.content LIKE :searchTerm)',
+          { searchTerm: `%${searchTerm}%` }
         );
       }
 
       if (searchId) {
-        items = items.filter(item => item.id === searchId);
+        queryBuilder.andWhere('post.id = :searchId', { searchId });
       }
 
       if (searchDate) {
-        const searchDateTime = new Date(searchDate).getTime();
-        items = items.filter(item => 
-          item.updatedAt.getTime() === searchDateTime
+        queryBuilder.andWhere(
+          'DATE(post.updatedAt) = DATE(:searchDate)',
+          { searchDate }
         );
       }
 
       // Apply sorting
-      items.sort((a, b) => {
-        const compareValue = sortOrder === SortOrder.ASC ? 1 : -1;
-        if (a[sortBy] < b[sortBy]) return -1 * compareValue;
-        if (a[sortBy] > b[sortBy]) return 1 * compareValue;
-        return 0;
-      });
+      queryBuilder.orderBy(`post.${sortBy}`, sortOrder);
+
+      // Get total count and results
+      const [items, total] = await queryBuilder.getManyAndCount();
 
       return {
         items,
         meta: {
-          total: items.length,
+          total,
           page,
-          lastPage,
+          lastPage: Math.ceil(total / limit),
           limit,
         },
       };
     } catch (error) {
       this.logger.error(
         `Failed to fetch posts: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }
   }
 
-  async findOne(id: number): Promise<Post> {
+  /**
+   * Find post by ID
+   * @param id - Post UUID
+   * @returns Found post
+   * @throws NotFoundException if post not found
+   */
+  async findOne(id: string): Promise<Post> {
     try {
       this.logger.log(`Fetching post with id: ${id}`);
-      // Mock implementation
-      const post = {
-        id,
-        title: `Post ${id}`,
-        content: `Content ${id}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
       
+      const post = await this.postRepository.findOne({
+        where: { id },
+        relations: ['user'],
+      });
+
       if (!post) {
         throw new NotFoundException(`Post with ID ${id} not found`);
       }
-      
+
       return post;
     } catch (error) {
       this.logger.error(
         `Failed to fetch post ${id}: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto): Promise<Post> {
+  /**
+   * Update post by ID
+   * @param id - Post UUID
+   * @param updatePostDto - Update data
+   * @returns Updated post
+   */
+  async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
     try {
       this.logger.log(`Updating post ${id}: ${JSON.stringify(updatePostDto)}`);
+      
       const post = await this.findOne(id);
-      return {
-        ...post,
-        ...updatePostDto,
-        updatedAt: new Date(),
-      };
+      
+      Object.assign(post, updatePostDto);
+      
+      return await this.postRepository.save(post);
     } catch (error) {
       this.logger.error(
         `Failed to update post ${id}: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }
   }
 
-  async remove(id: number): Promise<void> {
+  /**
+   * Remove post by ID
+   * @param id - Post UUID
+   */
+  async remove(id: string): Promise<void> {
     try {
       this.logger.log(`Removing post ${id}`);
+      
       const post = await this.findOne(id);
-      // Mock deletion
+      
+      await this.postRepository.remove(post);
     } catch (error) {
       this.logger.error(
         `Failed to remove post ${id}: ${error.message}`,
-        error.stack
+        error.stack,
       );
       throw error;
     }

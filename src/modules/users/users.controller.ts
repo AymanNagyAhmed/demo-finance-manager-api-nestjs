@@ -70,7 +70,7 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: 'User not found',
   })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
@@ -84,7 +84,7 @@ export class UsersController {
     description: 'User has been successfully deleted.',
     type: User,
   })
-  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
   }
 } 
