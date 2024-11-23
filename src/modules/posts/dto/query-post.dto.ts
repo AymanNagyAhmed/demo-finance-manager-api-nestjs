@@ -1,67 +1,80 @@
-import { IsOptional, IsString, IsInt, Min, Max, IsEnum, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsInt, Min, Max, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum SortOrder {
-  ASC = 'ASC',
-  DESC = 'DESC',
+  ASC = 'asc',
+  DESC = 'desc',
 }
 
 export enum SortField {
-  ID = 'id',
   TITLE = 'title',
-  CONTENT = 'content',
   CREATED_AT = 'createdAt',
   UPDATED_AT = 'updatedAt',
 }
 
 export class QueryPostDto {
-  @ApiPropertyOptional({ example: 'search term' })
+  @ApiPropertyOptional({
+    description: 'Search term for title and content',
+    example: 'technology',
+  })
   @IsOptional()
   @IsString()
+  @Matches(/^[a-zA-Z0-9\s\-_.]+$/, {
+    message: 'Search term can only contain letters, numbers, spaces, and basic punctuation',
+  })
   searchTerm?: string;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiPropertyOptional({
+    description: 'Filter by user ID',
+    example: '507f1f77bcf86cd799439011',
+  })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  searchId?: number;
+  @IsString()
+  @Matches(/^[0-9a-fA-F]{24}$/, {
+    message: 'Invalid user ID format',
+  })
+  userId?: string;
 
-  @ApiPropertyOptional({ example: '2024-03-20T00:00:00Z' })
-  @IsOptional()
-  @IsDateString()
-  searchDate?: string;
-
-  @ApiPropertyOptional({ 
-    enum: SortField, 
+  @ApiPropertyOptional({
+    enum: SortField,
     default: SortField.CREATED_AT,
-    description: 'Field to sort by'
+    description: 'Field to sort by',
   })
   @IsOptional()
   @IsEnum(SortField)
   sortBy?: SortField = SortField.CREATED_AT;
 
-  @ApiPropertyOptional({ 
-    enum: SortOrder, 
+  @ApiPropertyOptional({
+    enum: SortOrder,
     default: SortOrder.DESC,
-    description: 'Sort direction'
+    description: 'Sort direction',
   })
   @IsOptional()
   @IsEnum(SortOrder)
-  sortOrder?: SortOrder = SortOrder.DESC;
+  order?: SortOrder = SortOrder.DESC;
 
-  @ApiPropertyOptional({ minimum: 1, default: 1 })
-  @IsOptional()
+  @ApiPropertyOptional({
+    minimum: 1,
+    default: 1,
+    description: 'Page number',
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @IsOptional()
   page?: number = 1;
 
-  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 10 })
-  @IsOptional()
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 50,
+    default: 10,
+    description: 'Number of items per page',
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(50)
+  @IsOptional()
   limit?: number = 10;
 } 

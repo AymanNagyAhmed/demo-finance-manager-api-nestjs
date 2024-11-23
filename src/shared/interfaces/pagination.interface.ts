@@ -1,3 +1,5 @@
+import { Document } from 'mongoose';
+
 export interface PaginatedResponse<T> {
   items: T[];
   meta: {
@@ -6,4 +8,6 @@ export interface PaginatedResponse<T> {
     lastPage: number;
     limit: number;
   };
-} 
+}
+
+export type MongoDocument<T> = T & Document; 
