@@ -2,9 +2,22 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ApiResponseInterceptor } from '@/common/interceptors/api-response.interceptor';
+import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
+import { GlobalExceptionFilter } from '@/common/filters/global-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Global interceptors
+  app.useGlobalInterceptors(
+    new ApiResponseInterceptor(),
+    new LoggingInterceptor(app.get(ConfigService)),
+  );
+  
+  // Global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
   
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,6 +35,7 @@ async function bootstrap() {
     .setTitle('Your API')
     .setDescription('API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
