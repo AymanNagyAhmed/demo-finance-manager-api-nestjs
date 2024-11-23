@@ -4,7 +4,6 @@ import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import { PostsModule } from '@/modules/posts/posts.module';
 import { UsersModule } from '@/modules/users/users.module';
-import { CustomLogger } from '@/shared/services/logger.service';
 
 @Module({
   imports: [
@@ -15,9 +14,6 @@ import { CustomLogger } from '@/shared/services/logger.service';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    CustomLogger,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

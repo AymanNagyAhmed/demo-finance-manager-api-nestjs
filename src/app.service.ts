@@ -1,11 +1,10 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { ApplicationException } from '@/common/exceptions/application.exception';
-import { ResponseUtil } from '@/common/utils/response.util';
-import { SuccessResponse } from '@/common/interfaces/response.interface';
+import { ApiResponse } from '@/common/interfaces/api-response.interface';
 
 @Injectable()
 export class AppService {
-  async getHello(): Promise<SuccessResponse<{ message: string }>> {
+  async getHello(): Promise<ApiResponse<{ message: string }>> {
     const someCondition = false;
     if (someCondition) {
       throw new ApplicationException(
@@ -14,9 +13,13 @@ export class AppService {
       );
     }
     
-    return ResponseUtil.success(
-      { message: 'Hello World!' },
-      'Greeting retrieved successfully'
-    );
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: 'Greeting retrieved successfully',
+      path: '/',
+      timestamp: new Date().toISOString(),
+      data: { message: 'Hello World!' }
+    };
   }
 }
