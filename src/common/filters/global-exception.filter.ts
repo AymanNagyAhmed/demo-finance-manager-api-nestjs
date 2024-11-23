@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 import { ApiErrorResponse } from '@/common/interfaces/api-response.interface';
 
 @Catch()
@@ -18,15 +19,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status = 
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: Record<string, any> | undefined;
 
     if (exception instanceof HttpException) {
+      status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
       
       if (typeof exceptionResponse === 'string') {
@@ -35,6 +33,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const response = exceptionResponse as Record<string, any>;
         message = response.message || message;
         errors = response.errors;
+      }
+    } else if (exception instanceof QueryFailedError) {
+      status = HttpStatus.BAD_REQUEST;
+      message = 'Database operation failed';
+      if (exception.message.includes('Duplicate entry')) {
+        status = HttpStatus.CONFLICT;
+        message = 'Duplicate entry found';
       }
     }
 
