@@ -14,7 +14,7 @@ import { PostsService } from '@/modules/posts/posts.service';
 import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
 import { QueryPostDto } from '@/modules/posts/dto/query-post.dto';
-import { Post as PostEntity } from '@/modules/posts/schemas/post.schema';
+import { Post as PostSchema } from '@/modules/posts/schemas/post.schema';
 import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
 
 @ApiTags('Posts')
@@ -27,12 +27,12 @@ export class PostsController {
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
     description: 'Post has been successfully created.',
-    type: PostEntity 
+    type: PostSchema 
   })
   create(
     @Param('userId') userId: string,
     @Body() createPostDto: CreatePostDto
-  ): Promise<PostEntity> {
+  ): Promise<PostSchema> {
     return this.postsService.create(createPostDto, userId);
   }
 
@@ -41,10 +41,10 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns paginated posts',
-    type: PostEntity,
+    type: PostSchema,
     isArray: true
   })
-  findAll(@Query() query: QueryPostDto): Promise<PaginatedResponse<PostEntity>> {
+  findAll(@Query() query: QueryPostDto): Promise<PaginatedResponse<PostSchema>> {
     return this.postsService.findAll(query);
   }
 
@@ -53,9 +53,9 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns a post by id',
-    type: PostEntity
+    type: PostSchema
   })
-  findOne(@Param('id') id: string): Promise<PostEntity> {
+  findOne(@Param('id') id: string): Promise<PostSchema> {
     return this.postsService.findOne(id);
   }
 
@@ -64,13 +64,13 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Post has been successfully updated.',
-    type: PostEntity
+    type: PostSchema
   })
   update(
     @Param('id') id: string,
     @Param('userId') userId: string,
     @Body() updatePostDto: UpdatePostDto
-  ): Promise<PostEntity> {
+  ): Promise<PostSchema> {
     return this.postsService.update(id, updatePostDto, userId);
   }
 
@@ -92,10 +92,10 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns all posts for a specific user',
-    type: PostEntity,
+    type: PostSchema,
     isArray: true
   })
-  findByUser(@Param('userId') userId: string): Promise<PostEntity[]> {
+  findByUser(@Param('userId') userId: string): Promise<PostSchema[]> {
     return this.postsService.findByUser(userId);
   }
 }

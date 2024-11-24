@@ -1,10 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { QueryUserDto } from './dto/query-user.dto';
+import { User } from '@/modules/users/schemas/user.schema';
+import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
+import { QueryUserDto } from '@/modules/users/dto/query-user.dto';
 import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
 import { UserExistsException } from './exceptions/user-exists.exception';
 import * as bcrypt from 'bcrypt';
@@ -14,7 +14,7 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {

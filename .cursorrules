@@ -197,3 +197,21 @@ Example: isLoading, hasError, canDelete, etc.
 - Use barrel files only for closely related files
 - Keep barrel files in their respective directories
 - Example:
+
+## Testing Standards and Best Practices
+
+### Service Testing
+- Mock all external dependencies (Model, Services)
+- Use proper type definitions for mocks
+- Test all service methods
+- Include error cases
+- Example:
+
+## Testing Mock Data Standards
+
+### Mock Data Structure
+- Create complete mock objects matching schema
+- Include all required fields
+- Use realistic test data
+- Follow type definitions
+- Example:

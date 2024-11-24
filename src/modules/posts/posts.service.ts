@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Post, PostDocument } from '@/modules/posts/schemas/post.schema';
+import { Post } from '@/modules/posts/schemas/post.schema';
 import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
 import { QueryPostDto, SortOrder } from '@/modules/posts/dto/query-post.dto';
@@ -12,7 +12,7 @@ export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
   constructor(
-    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @InjectModel(Post.name) private readonly postModel: Model<Post>,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: string): Promise<Post> {
