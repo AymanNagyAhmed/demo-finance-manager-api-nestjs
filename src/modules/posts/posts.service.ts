@@ -1,37 +1,28 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Post } from '@/modules/posts/schemas/post.schema';
 import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
 import { QueryPostDto, SortOrder } from '@/modules/posts/dto/query-post.dto';
 import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
-import { Post } from '@/modules/posts/entities/post.entity';
 
 @Injectable()
 export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
   constructor(
-    @InjectRepository(Post)
-    private readonly postRepository: Repository<Post>,
+    @InjectModel(Post.name) private readonly postModel: Model<Post>,
   ) {}
 
-  /**
-   * Create a new post
-   * @param createPostDto - Post creation data
-   * @param userId - UUID of the user creating the post
-   * @returns Created post
-   */
   async create(createPostDto: CreatePostDto, userId: string): Promise<Post> {
     try {
-      this.logger.log(`Creating post: ${JSON.stringify(createPostDto)}`);
-      
-      const post = this.postRepository.create({
+      const post = new this.postModel({
         ...createPostDto,
-        userId,
+        user: userId,
       });
 
-      return await this.postRepository.save(post);
+      return await post.save();
     } catch (error) {
       this.logger.error(
         `Failed to create post: ${error.message}`,
@@ -41,52 +32,39 @@ export class PostsService {
     }
   }
 
-  /**
-   * Find all posts with pagination and filtering
-   * @param query - Query parameters for filtering and pagination
-   * @returns Paginated post list
-   */
   async findAll(query: QueryPostDto): Promise<PaginatedResponse<Post>> {
     try {
       const {
         searchTerm,
-        searchId,
-        searchDate,
+        userId,
         sortBy = 'createdAt',
-        sortOrder = SortOrder.DESC,
+        order = SortOrder.DESC,
         page = 1,
         limit = 10,
       } = query;
 
-      const queryBuilder = this.postRepository.createQueryBuilder('post')
-        .leftJoinAndSelect('post.user', 'user')
-        .skip((page - 1) * limit)
-        .take(limit);
+      const filter: any = {};
 
-      // Apply search filters
       if (searchTerm) {
-        queryBuilder.andWhere(
-          '(post.title LIKE :searchTerm OR post.content LIKE :searchTerm)',
-          { searchTerm: `%${searchTerm}%` }
-        );
+        filter.$text = { $search: searchTerm };
       }
 
-      if (searchId) {
-        queryBuilder.andWhere('post.id = :searchId', { searchId });
+      if (userId) {
+        filter.user = userId;
       }
 
-      if (searchDate) {
-        queryBuilder.andWhere(
-          'DATE(post.updatedAt) = DATE(:searchDate)',
-          { searchDate }
-        );
-      }
+      const sortOrder = order === SortOrder.ASC ? 1 : -1;
 
-      // Apply sorting
-      queryBuilder.orderBy(`post.${sortBy}`, sortOrder);
-
-      // Get total count and results
-      const [items, total] = await queryBuilder.getManyAndCount();
+      const [items, total] = await Promise.all([
+        this.postModel
+          .find(filter)
+          .sort({ [sortBy]: sortOrder })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate('user', 'firstName lastName email')
+          .exec(),
+        this.postModel.countDocuments(filter)
+      ]);
 
       return {
         items,
@@ -106,20 +84,12 @@ export class PostsService {
     }
   }
 
-  /**
-   * Find post by ID
-   * @param id - Post UUID
-   * @returns Found post
-   * @throws NotFoundException if post not found
-   */
   async findOne(id: string): Promise<Post> {
     try {
-      this.logger.log(`Fetching post with id: ${id}`);
-      
-      const post = await this.postRepository.findOne({
-        where: { id },
-        relations: ['user'],
-      });
+      const post = await this.postModel
+        .findById(id)
+        .populate('user', 'firstName lastName email')
+        .exec();
 
       if (!post) {
         throw new NotFoundException(`Post with ID ${id} not found`);
@@ -135,21 +105,23 @@ export class PostsService {
     }
   }
 
-  /**
-   * Update post by ID
-   * @param id - Post UUID
-   * @param updatePostDto - Update data
-   * @returns Updated post
-   */
-  async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
+  async update(id: string, updatePostDto: UpdatePostDto, userId: string): Promise<Post> {
     try {
-      this.logger.log(`Updating post ${id}: ${JSON.stringify(updatePostDto)}`);
+      const post = await this.postModel.findById(id);
+      if (!post) {
+        throw new NotFoundException(`Post with ID ${id} not found`);
+      }
       
-      const post = await this.findOne(id);
-      
-      Object.assign(post, updatePostDto);
-      
-      return await this.postRepository.save(post);
+      if (post.user.toString() !== userId) {
+        throw new ForbiddenException('You can only update your own posts');
+      }
+
+      const updatedPost = await this.postModel
+        .findByIdAndUpdate(id, updatePostDto, { new: true })
+        .populate('user', 'firstName lastName email')
+        .exec();
+
+      return updatedPost;
     } catch (error) {
       this.logger.error(
         `Failed to update post ${id}: ${error.message}`,
@@ -159,20 +131,36 @@ export class PostsService {
     }
   }
 
-  /**
-   * Remove post by ID
-   * @param id - Post UUID
-   */
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId: string): Promise<void> {
     try {
-      this.logger.log(`Removing post ${id}`);
+      const post = await this.postModel.findById(id);
+      if (!post) {
+        throw new NotFoundException(`Post with ID ${id} not found`);
+      }
       
-      const post = await this.findOne(id);
-      
-      await this.postRepository.remove(post);
+      if (post.user.toString() !== userId) {
+        throw new ForbiddenException('You can only delete your own posts');
+      }
+
+      await this.postModel.findByIdAndDelete(id).exec();
     } catch (error) {
       this.logger.error(
         `Failed to remove post ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async findByUser(userId: string): Promise<Post[]> {
+    try {
+      return await this.postModel
+        .find({ user: userId })
+        .populate('user', 'firstName lastName email')
+        .exec();
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch posts for user ${userId}: ${error.message}`,
         error.stack,
       );
       throw error;

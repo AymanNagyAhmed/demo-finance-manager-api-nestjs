@@ -8,37 +8,32 @@ import {
   Delete, 
   Query,
   HttpStatus,
-  UseGuards,
-  Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PostsService } from '@/modules/posts/posts.service';
 import { CreatePostDto } from '@/modules/posts/dto/create-post.dto';
 import { UpdatePostDto } from '@/modules/posts/dto/update-post.dto';
 import { QueryPostDto } from '@/modules/posts/dto/query-post.dto';
-import { Post as PostEntity } from '@/modules/posts/entities/post.entity';
+import { Post as PostSchema } from '@/modules/posts/schemas/post.schema';
 import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 
 @ApiTags('Posts')
 @Controller('posts')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new post' })
+  @Post(':userId')
+  @ApiOperation({ summary: 'Create a new post for a user' })
   @ApiResponse({ 
     status: HttpStatus.CREATED, 
     description: 'Post has been successfully created.',
-    type: PostEntity 
+    type: PostSchema 
   })
   create(
-    @Request() req,
+    @Param('userId') userId: string,
     @Body() createPostDto: CreatePostDto
-  ): Promise<PostEntity> {
-    return this.postsService.create(createPostDto, req.user.id);
+  ): Promise<PostSchema> {
+    return this.postsService.create(createPostDto, userId);
   }
 
   @Get()
@@ -46,10 +41,10 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns paginated posts',
-    type: PostEntity,
+    type: PostSchema,
     isArray: true
   })
-  findAll(@Query() query: QueryPostDto): Promise<PaginatedResponse<PostEntity>> {
+  findAll(@Query() query: QueryPostDto): Promise<PaginatedResponse<PostSchema>> {
     return this.postsService.findAll(query);
   }
 
@@ -58,33 +53,49 @@ export class PostsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returns a post by id',
-    type: PostEntity
+    type: PostSchema
   })
-  findOne(@Param('id') id: string): Promise<PostEntity> {
+  findOne(@Param('id') id: string): Promise<PostSchema> {
     return this.postsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(':id/:userId')
   @ApiOperation({ summary: 'Update a post' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Post has been successfully updated.',
-    type: PostEntity
+    type: PostSchema
   })
   update(
-    @Param('id') id: string, 
+    @Param('id') id: string,
+    @Param('userId') userId: string,
     @Body() updatePostDto: UpdatePostDto
-  ): Promise<PostEntity> {
-    return this.postsService.update(id, updatePostDto);
+  ): Promise<PostSchema> {
+    return this.postsService.update(id, updatePostDto, userId);
   }
 
-  @Delete(':id')
+  @Delete(':id/:userId')
   @ApiOperation({ summary: 'Delete a post' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Post has been successfully deleted.'
   })
-  remove(@Param('id') id: string): Promise<void> {
-    return this.postsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @Param('userId') userId: string
+  ): Promise<void> {
+    return this.postsService.remove(id, userId);
+  }
+
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Get all posts by user' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returns all posts for a specific user',
+    type: PostSchema,
+    isArray: true
+  })
+  findByUser(@Param('userId') userId: string): Promise<PostSchema[]> {
+    return this.postsService.findByUser(userId);
   }
 }

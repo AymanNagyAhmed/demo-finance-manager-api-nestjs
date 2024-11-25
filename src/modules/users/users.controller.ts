@@ -7,7 +7,6 @@ import {
   Delete, 
   Param, 
   UseGuards, 
-  ParseIntPipe,
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -17,7 +16,7 @@ import { UsersService } from '@/modules/users/users.service';
 import { AdminManagerGuard } from '@/modules/users/guards/admin-manager.guard';
 import { Roles } from '@/modules/users/decorators/roles.decorator';
 import { Role } from '@/modules/users/enums/role.enum';
-import { User } from '@/modules/users/entities/user.entity';
+import { User } from '@/modules/users/schemas/user.schema';
 import { PaginatedResponse } from '@/shared/interfaces/pagination.interface';
 
 @ApiTags('users')
@@ -44,7 +43,7 @@ export class UsersController {
     description: 'The user has been successfully created.',
     type: User,
   })
-  async createUser(@Body() createUserDto: CreateUserDto) {
+  async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
 
@@ -55,8 +54,8 @@ export class UsersController {
     description: 'Returns user information for the given phone number',
     type: User,
   })
-  async findByPhone(@Query() createUserDto: CreateUserDto) {
-    return this.usersService.findByPhone(createUserDto.phoneNumber);
+  async findByPhone(@Query('phoneNumber') phoneNumber: string): Promise<User> {
+    return this.usersService.findByPhone(phoneNumber);
   }
 
   @Get(':id')
@@ -82,7 +81,6 @@ export class UsersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'User has been successfully deleted.',
-    type: User,
   })
   async remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
