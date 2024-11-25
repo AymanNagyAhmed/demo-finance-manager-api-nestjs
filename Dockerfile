@@ -44,8 +44,9 @@ RUN chown -R nestjs:nestjs /usr/src/app
 # Switch to non-root user
 USER nestjs
 
-# Set production environment
-ENV NODE_ENV=production
+# Set production environment and default port
+ENV NODE_ENV=production \
+    PORT=80
 
 # Start application
 CMD [ "node", "dist/main" ] 
