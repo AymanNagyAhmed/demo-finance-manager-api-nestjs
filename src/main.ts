@@ -40,6 +40,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  // Use PORT from environment variable (provided by Cloud Run) or fallback to 8080
+  const port = process.env.PORT || 8080;
+  await app.listen(port);
+  console.log(`Application is running on port ${port}`);
 }
 bootstrap();
